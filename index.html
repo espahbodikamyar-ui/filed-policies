@@ -939,6 +939,7 @@ function renderCards() {
 
     const card = document.createElement("div");
     card.className = "policy-card";
+    card.id = `policy-${p.category}`;
     card.dataset.severity = p.severity;
 
     const meta = metadata[p.category];
