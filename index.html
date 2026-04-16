@@ -1,0 +1,1045 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Filed — Compliance Policies</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: #f5f5f7;
+      color: #1d1d1f;
+      min-height: 100vh;
+    }
+
+    header {
+      background: #fff;
+      border-bottom: 1px solid #e5e5e5;
+      padding: 20px 40px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+
+    header h1 {
+      font-size: 18px;
+      font-weight: 600;
+      letter-spacing: -0.3px;
+    }
+
+    header span {
+      font-size: 13px;
+      color: #6e6e73;
+    }
+
+    #status {
+      font-size: 12px;
+      padding: 4px 10px;
+      border-radius: 20px;
+      background: #f0f0f0;
+      color: #6e6e73;
+    }
+
+    #status.live { background: #e3f9e5; color: #1a7a30; }
+    #status.error { background: #fde8e8; color: #c0392b; }
+
+    main {
+      max-width: 960px;
+      margin: 40px auto;
+      padding: 0 24px 60px;
+    }
+
+    .filter-bar {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 28px;
+      flex-wrap: wrap;
+    }
+
+    .filter-btn {
+      font-size: 12px;
+      font-weight: 500;
+      padding: 5px 14px;
+      border-radius: 20px;
+      border: 1px solid #d1d1d6;
+      background: #fff;
+      cursor: pointer;
+      color: #3a3a3c;
+      transition: all 0.15s;
+    }
+
+    .filter-btn:hover { border-color: #aaa; }
+    .filter-btn.active { background: #1d1d1f; color: #fff; border-color: #1d1d1f; }
+    .filter-btn.high.active   { background: #c0392b; border-color: #c0392b; }
+    .filter-btn.medium.active { background: #d4860a; border-color: #d4860a; }
+    .filter-btn.low.active    { background: #1a7a30; border-color: #1a7a30; }
+
+    .policy-card {
+      background: #fff;
+      border-radius: 12px;
+      border: 1px solid #e5e5e5;
+      margin-bottom: 16px;
+      overflow: hidden;
+      transition: box-shadow 0.15s;
+    }
+
+    .policy-card:hover { box-shadow: 0 4px 20px rgba(0,0,0,0.07); }
+
+    .card-header {
+      display: flex;
+      align-items: center;
+      padding: 18px 24px;
+      cursor: pointer;
+      user-select: none;
+      gap: 12px;
+    }
+
+    .severity-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .severity-dot.high   { background: #c0392b; }
+    .severity-dot.medium { background: #d4860a; }
+    .severity-dot.low    { background: #1a7a30; }
+
+    .card-title {
+      flex: 1;
+    }
+
+    .card-title h2 {
+      font-size: 15px;
+      font-weight: 600;
+      letter-spacing: -0.2px;
+    }
+
+    .card-title p {
+      font-size: 12px;
+      color: #6e6e73;
+      margin-top: 2px;
+    }
+
+    .card-badges {
+      display: flex;
+      gap: 6px;
+      align-items: center;
+    }
+
+    .badge {
+      font-size: 11px;
+      font-weight: 500;
+      padding: 3px 8px;
+      border-radius: 4px;
+    }
+
+    .badge.severity-high   { background: #fde8e8; color: #c0392b; }
+    .badge.severity-medium { background: #fef3cd; color: #7a4f00; }
+    .badge.severity-low    { background: #e3f9e5; color: #1a7a30; }
+    .badge.override        { background: #e8f0fe; color: #1a56db; }
+
+    .chevron {
+      width: 20px;
+      height: 20px;
+      color: #aeaeb2;
+      transition: transform 0.2s;
+      flex-shrink: 0;
+    }
+
+    .policy-card.open .chevron { transform: rotate(180deg); }
+
+    .card-body {
+      display: none;
+      padding: 0 24px 24px;
+      border-top: 1px solid #f0f0f0;
+    }
+
+    .policy-card.open .card-body { display: block; }
+
+    .override-notice {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 11px;
+      color: #1a56db;
+      background: #e8f0fe;
+      padding: 3px 8px;
+      border-radius: 4px;
+      margin-bottom: 12px;
+      margin-top: 18px;
+    }
+
+.empty { text-align: center; padding: 60px 0; color: #aeaeb2; font-size: 14px; }
+
+    /* ── Policy content formatting ── */
+
+    .policy-content {
+      padding-top: 18px;
+      font-size: 13.5px;
+      line-height: 1.75;
+      color: #3a3a3c;
+    }
+
+    .policy-content .policy-intro {
+      font-weight: 500;
+      color: #1d1d1f;
+      margin-bottom: 4px;
+    }
+
+    .policy-content h3.policy-section {
+      font-size: 10.5px;
+      font-weight: 600;
+      letter-spacing: 0.6px;
+      text-transform: uppercase;
+      color: #aeaeb2;
+      margin: 22px 0 10px;
+      padding-bottom: 6px;
+      border-bottom: 1px solid #f0f0f0;
+    }
+
+    .policy-content h4.policy-subsection {
+      font-size: 13px;
+      font-weight: 600;
+      color: #1d1d1f;
+      margin: 16px 0 6px;
+    }
+
+    .policy-content ul.policy-list,
+    .policy-content ol.policy-list {
+      padding-left: 20px;
+      margin: 4px 0 10px;
+    }
+
+    .policy-content li {
+      margin-bottom: 3px;
+    }
+
+    .policy-content li > ul {
+      margin-top: 3px;
+      padding-left: 16px;
+    }
+
+    .policy-content p.policy-para {
+      margin-bottom: 6px;
+    }
+
+    .policy-content strong { color: #1d1d1f; }
+
+    .policy-content code {
+      font-family: "SF Mono", Menlo, monospace;
+      font-size: 12px;
+      background: #f0f0f0;
+      padding: 1px 5px;
+      border-radius: 3px;
+    }
+
+    /* Tables */
+    .policy-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+      margin: 8px 0 16px;
+      border-radius: 8px;
+      overflow: hidden;
+      border: 1px solid #e5e5e5;
+    }
+
+    .policy-table thead tr {
+      background: #f5f5f7;
+    }
+
+    .policy-table th {
+      font-size: 10.5px;
+      font-weight: 600;
+      letter-spacing: 0.4px;
+      text-transform: uppercase;
+      color: #6e6e73;
+      padding: 9px 14px;
+      text-align: left;
+      border-bottom: 1px solid #e5e5e5;
+    }
+
+    .policy-table td {
+      padding: 9px 14px;
+      border-bottom: 1px solid #f0f0f0;
+      vertical-align: top;
+      line-height: 1.6;
+    }
+
+    .policy-table tbody tr:last-child td {
+      border-bottom: none;
+    }
+
+    .policy-table tbody tr:hover td {
+      background: #fafafa;
+    }
+
+    /* ── Policy metadata block ── */
+
+    .policy-meta {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0;
+      border: 1px solid #e5e5e5;
+      border-radius: 8px;
+      overflow: hidden;
+      margin: 18px 0 20px;
+      font-size: 12.5px;
+    }
+
+    .meta-row {
+      display: contents;
+    }
+
+    .meta-label {
+      background: #f5f5f7;
+      padding: 8px 14px;
+      color: #6e6e73;
+      font-weight: 500;
+      border-bottom: 1px solid #e5e5e5;
+    }
+
+    .meta-value {
+      background: #fff;
+      padding: 8px 14px;
+      color: #1d1d1f;
+      border-bottom: 1px solid #e5e5e5;
+    }
+
+    .meta-row:last-child .meta-label,
+    .meta-row:last-child .meta-value {
+      border-bottom: none;
+    }
+
+    /* ── Audit log ── */
+
+    .audit-section {
+      margin-top: 28px;
+      padding-top: 20px;
+      border-top: 1px solid #f0f0f0;
+    }
+
+    .audit-title {
+      font-size: 10.5px;
+      font-weight: 600;
+      letter-spacing: 0.6px;
+      text-transform: uppercase;
+      color: #aeaeb2;
+      margin-bottom: 10px;
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>Filed — Compliance Policies</h1>
+  <div style="display:flex;align-items:center;gap:16px;">
+    <span id="last-updated"></span>
+    <div id="status">Loading…</div>
+  </div>
+</header>
+
+<main>
+  <div class="filter-bar">
+    <button class="filter-btn active" data-filter="all">All</button>
+    <button class="filter-btn high" data-filter="high">High risk</button>
+    <button class="filter-btn medium" data-filter="medium">Medium risk</button>
+    <button class="filter-btn low" data-filter="low">Low risk</button>
+  </div>
+  <div id="cards"></div>
+  <div class="empty" id="empty" style="display:none;">No policies match this filter.</div>
+</main>
+
+<script>
+const SUPABASE_URL = "https://hyolhvjngeapqnqkhxky.supabase.co";
+const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh5b2xodmpuZ2VhcHFucWtoeGt5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU2NTA0MTQsImV4cCI6MjA5MTIyNjQxNH0.MEjahHJWthVsgTlOX8sE6AR3pnVLm6lxMpVVVMoc4cw";
+
+const BASE_STORAGE = "https://hyolhvjngeapqnqkhxky.supabase.co/storage/v1/object/public/policies";
+const docxViewer = url => `https://view.officeapps.live.com/op/view.aspx?src=${encodeURIComponent(url)}`;
+
+const POLICIES = [
+  {
+    category: "spend",
+    name: "Spend",
+    doc: "Spend Policy v2",
+    severity: "low",
+    url: `${BASE_STORAGE}/Spend%20Policy.pdf`,
+    default: `Filed Spend Policy v2 — Approved by Kamyar
+
+At Filed, we trust you to make decisions that move us forward. Spend what you need to perform at your best, as long as it's in the company's best interest. Accountability, clarity, and simplicity guide how we manage company funds.
+
+## 1. Core Principles
+- **Business necessity:** Spend only to achieve clear business outcomes
+- **One team:** The same rules apply to everyone, unless explicitly exempted
+- **Transparency:** Keep accurate records — receipts and memos are required for traceability
+- **Judgment:** If you can justify the spend to any leader, it's likely within policy
+- **Ask first:** When in doubt, check with your manager or **@Kamyar** before spending
+
+## 2. Spending Guidelines
+
+### 2.1 General Rules
+- A receipt and memo are **required** for any expense **≥ $50** — missing documentation may lead to pay deduction
+- Treat receipts like cash — save them digitally and upload immediately
+- For larger expenses, submit a request in **#spend-approvals** before committing
+
+## 3. Card & Receipt Handling
+
+### 3.1 Ramp Card (US & Global)
+- Use Ramp for all general company purchases
+- Upload receipts and add memos directly in Ramp for expenses **≥ $100**
+- For recurring subscriptions, upload the first receipt and keep renewal confirmations if requested
+- Exceptions such as travel emergencies require human review
+- Anything outside normal business spend will be escalated for manual review in Ramp
+- Forward invoices to **filedinc@ap.ramp.com**
+
+### 3.2 SEB Card (Sweden)
+- All receipts are required — **no threshold**
+- Upload via kvitto@mybindity.com using the **Fortnox Kvitto** app
+- Deadline: **Friday of the week the expense occurs**
+- For Swedish suppliers (inventory, office costs, Mathem, consumables): pay via SEB card or invoice
+
+## 4. Invoicing & Billing
+- Send all invoices to **billing@filed.com**
+- Include department reference and correct company info
+
+| Entity | Address | VAT |
+| --- | --- | --- |
+| Filed AB | Eriksbergsgatan 10, 114 30 Stockholm | SE559482067101 |
+| Filed, Inc. | 109 N 12th St - 9th Floor, Brooklyn, NY 11249 | — |
+
+## 5. Spending Categories
+
+### 5.1 One-Time Purchases
+- Use a Ramp card or invoice payment
+- Upload receipts immediately
+
+### 5.2 Recurring Subscriptions
+- Upload the first receipt and ensure renewals are automatically recorded in Ramp
+
+### 5.3 Benefits
+- For meals, wellness, or commute costs, refer to the **Benefits policy**
+
+## 6. Travel & Lodging
+
+### Flights
+- Book at least **14 days in advance** — exceptions (e.g. travel emergencies) require human review
+- Fare up to **15% above the average** cost for the route
+
+| Class | Condition |
+| --- | --- |
+| Economy | Flights < 6 hours |
+| Premium Economy | Flights > 6 hours (if in policy and not excessively expensive) |
+| Business | Flights > 9 hours — **prior manager approval required** |
+| First class | **NOT permitted** — no airport lounge access |
+
+- One checked bag and Wi-Fi are covered
+- Airport meals/snacks per diem: **$20**
+
+### Hotels / Airbnbs
+- Standard room only, at maximum **15% above average rate** for your dates
+- Staying at official conference hotels is allowed, even above the limit
+- **NOT reimbursable:** in-room entertainment, movies, minibar, spa purchases — will be escalated for manual review
+
+### Traktamente (Swedish Per Diem)
+- Per diem claims must be submitted using the **Traktamente template**
+- Template auto-calculates the allowance based on departure/return dates and times
+- Fill in your name, department, destination, purpose, and country
+- Mark any meals paid or provided by the company to reduce the per diem accordingly
+
+## 7. Ground & Rail Transport
+- Rideshare/taxi (e.g. UberX, Lyft) or public transit preferred — **no premium rides** (Uber Black, Lyft Lux)
+- Rideshare is allowed during work travel for business purposes and client events
+- Rental cars: **intermediate class or below** — no upgrades
+- Fines, parking tickets, towing, or penalties are **NOT reimbursable** — will be escalated for manual review
+- Rail: **economy/coach only** — first-class requires manager or leadership approval before booking
+
+## 8. Meals & Entertainment
+
+| Type | Limit |
+| --- | --- |
+| Travel per diem — full day (non-HQ) | **$70** |
+| Breakfast | **≤ $15** |
+| Lunch | **≤ $20** |
+| Dinner (incl. alcohol) | **≤ $35** |
+| Visitors to Stockholm HQ — dinner | **$20** (beyond this is a personal expense) |
+| Client meals | **≤ $90/person** — list all attendees in Ramp memo |
+| Tips | Up to **20%** (US) or **10–15%** (abroad), on purchases over $10 |
+
+- Company lunches are **NOT provided or reimbursed**
+
+## 9. Gifts & Other Expenses
+- Gifts of any kind (client, employee, or otherwise) are **NOT reimbursable**
+- Non-business expenses (political donations, personal purchases, adult entertainment) are **NOT reimbursable** and will be escalated for manual review
+
+## 10. Help & Questions
+- If unsure about an expense, reach out on Slack to **@Kamyar** or **@Baiba Pumpure**, or email them directly
+
+## In Summary
+- Spend what moves Filed forward
+- Document everything
+- Use judgment, not excess
+- If it's in the company's interest, it's in policy`,
+  },
+  {
+    category: "travel",
+    name: "Travel & Lodging",
+    doc: "Spend Policy v2 (Travel & Lodging)",
+    severity: "low",
+    url: `${BASE_STORAGE}/Spend%20Policy.pdf`,
+    default: `Filed Spend Policy v2 — Travel & Lodging
+
+## Flights
+- Book at least 14 days in advance. Late bookings need manager approval
+- Fare up to 15% above average for the route
+
+| Class | Allowed when |
+| --- | --- |
+| Economy | Flights < 6 hours |
+| Premium Economy | Flights > 6 hours |
+| Business | Flights > 9 hours — prior manager approval required |
+| First class | NOT permitted under any circumstances |
+
+- One checked bag and Wi-Fi are covered. Airport meals per diem: $20
+
+## Hotels / Airbnbs
+- Standard room only, at maximum 15% above average rate for your dates
+- Conference hotels are allowed even if above the limit
+- NOT reimbursable: in-room entertainment, movies, minibar, spa purchases
+
+## Ground transport
+- UberX, Lyft, or public transit preferred. Uber Black and Lyft Lux are NOT covered
+- Rental cars: intermediate class or below, no upgrades
+- Fines, parking tickets, and penalties are NOT reimbursable
+
+## Meals
+
+| Type | Limit |
+| --- | --- |
+| Travel per diem — full day (non-HQ) | $70 |
+| Breakfast | ≤ $15 |
+| Lunch | ≤ $20 |
+| Dinner (incl. alcohol) | ≤ $35 |
+| Visitors to Stockholm HQ — dinner | $20 (beyond this is a personal expense) |
+| Client meals | ≤ $90/person — list all attendees in Ramp memo |
+
+- Company lunches are NOT provided or reimbursed
+
+## Security while traveling
+- Laptops must be in carry-on luggage only — never checked bags
+- Never leave laptops in cars, hotel rooms, or other unsecured locations
+- Use a VPN when connecting to untrusted/public networks
+- Use privacy screen filters when working with taxpayer data or internal documents
+- Conduct sensitive calls/meetings in private rooms, not open areas`,
+  },
+  {
+    category: "signing",
+    name: "Signing Authority",
+    doc: "Signing Authority Policy",
+    severity: "medium",
+    url: `${BASE_STORAGE}/Spend%20Policy.pdf`,
+    default: `Filed Signing Authority
+
+## Who can sign what
+
+| Document type | Threshold | Approver |
+| --- | --- | --- |
+| NDAs | Standard mutual | Any team lead or above |
+| Vendor contracts | < $10,000/year | Department head |
+| Vendor contracts | $10,000–$50,000/year | VP or C-level |
+| Vendor contracts | > $50,000/year | CEO (Kamyar) |
+| Multi-year commitments | > 12 months (any value) | CEO |
+| Exclusive agreements / strategic partnerships | Any | CEO |
+| Data Processing Agreements (DPAs) | Any | DPO or legal lead only — engineers and PMs cannot execute |
+| Custom SLAs with uptime or liability clauses | Any | Legal review required first |
+
+## General rule
+- If you're unsure whether you have authority to sign, **assume you don't**
+- Contact Kamyar or Baiba before signing anything
+
+## NDA requirement
+- An NDA must be signed before sharing any confidential information externally
+- Confidentiality obligations continue after employment ends`,
+  },
+  {
+    category: "data_flow",
+    name: "Data Classification",
+    doc: "Data Classification Policy v2",
+    severity: "high",
+    url: docxViewer(`${BASE_STORAGE}/DataClassificationPolicy_v2.docx`),
+    default: `Filed Data Classification & Handling Policy v2
+
+## Classification levels
+
+| Level | Examples | At rest | In transit | External sharing |
+| --- | --- | --- | --- | --- |
+| Public | Press releases, marketing, job postings | No restrictions | No restrictions | Unrestricted |
+| Internal | Policies, memos, planning docs | — | TLS | Role-based access |
+| Confidential | Customer/taxpayer data, PII, contracts, financials, personnel files, IP addresses | AES-256 | TLS | NDA + approval required |
+| Restricted | Source code, vuln/pen test reports, private keys, acquisition data, unpublished financials | Named individuals only | TLS | PROHIBITED without executive approval |
+
+## Key rules
+- Any unclassified information defaults to **Confidential**
+- Taxpayer data is Confidential at minimum; Restricted when it includes SSNs, financial account numbers, or other highly sensitive PII
+- Customer/client data must NEVER be shared with third parties without a signed DPA in place
+- PII must NEVER be posted in Slack, chat rooms, or public forums — sanitize first if needed for support
+- External disclosure to media or press requires explicit authorization from corporate communications
+- Cross-border data transfers (outside US) are prohibited — all data processed and stored on US-based servers only
+- Client data must NEVER be used to train AI models; PII must be anonymized before any AI processing
+- Disclosures of Confidential/Restricted data to third parties must be documented and tracked
+- Information with multiple classification levels must be protected at the highest level`,
+  },
+  {
+    category: "incident",
+    name: "Incident Response",
+    doc: "Incident Response Plan v2",
+    severity: "high",
+    url: docxViewer(`${BASE_STORAGE}/IncidentResponsePlan_v2.docx`),
+    default: `Filed Incident Response Plan v2
+
+## Reporting requirements
+- All personnel must report any suspected vulnerability, incident, or security event to the Security team within **24 hours** — failure to report is itself a policy violation
+- Report via email or Slack to the Security team
+- Customer-impacting incidents: post a status update every 30 minutes until resolved
+
+## Severity levels
+
+| Severity | Trigger | Contain by | Resolve by | Notify |
+| --- | --- | --- | --- | --- |
+| HIGH | Catastrophic impact, likely legal/regulatory violation, or confirmed taxpayer data breach | 4 hours | 24 hours | CEO, legal counsel, affected customers, potentially law enforcement/regulators |
+| MEDIUM | Harm to business units, potential data exposure (no confirmed breach) | 8 hours | 72 hours | CTO, affected team leads, customers if service impacted |
+| LOW | Policy violation, no data exposure, no business impact | — | 5 business days | ISM and relevant team lead |
+
+## If taxpayer data may be involved
+- ISM immediately escalates to CEO and initiates the data breach notification procedure
+- CEO may contact law enforcement
+
+## Recovery targets
+
+| System | RTO | RPO |
+| --- | --- | --- |
+| Filed platform / production databases | 2 hours | 1 hour |
+| Customer-facing web app | 2 hours | — |
+| Status page (status.filed.com) | 30 minutes | — |
+
+## Post-incident
+- Preserve all forensic evidence (logs, files, images, memory dumps) — do not destroy
+- Post-incident review required after every incident (root cause, timeline, lessons learned)
+- Systems validated as clean before returning to production`,
+  },
+  {
+    category: "ai_usage",
+    name: "AI Usage",
+    doc: "Acceptable Use Policy v2 / Code of Conduct v2",
+    severity: "medium",
+    url: docxViewer(`${BASE_STORAGE}/AcceptableUsePolicy_v2.docx`),
+    default: `Filed AI Usage Policy
+
+## Prohibited
+- Using AI tools (ChatGPT, Copilot, Claude, Gemini, etc.) to process, generate, or handle customer PII or taxpayer data
+- Using client data to train AI models — PII must be anonymized before any AI processing
+- Pasting internal financial data, unreleased product plans, or personnel information into AI tools
+- If you wouldn't email the content externally, **don't paste it into an AI tool**
+
+## Required for AI deployments
+- AI-generated code going to production must be reviewed by a human engineer
+- Deploying ML models or AI features to production requires a risk review with the tech lead
+- Any AI tool that will access Filed systems or data must go through the vendor onboarding checklist (DPA, data storage, SOC 2 check)`,
+  },
+  {
+    category: "access_control",
+    name: "Access Control",
+    doc: "Acceptable Use Policy v2 / Password Policy v2",
+    severity: "high",
+    url: docxViewer(`${BASE_STORAGE}/AcceptableUsePolicy_v2.docx`),
+    default: `Filed Access Control Policy
+
+## Credential rules
+- NEVER share passwords or login credentials with anyone — if asked, deny and have the system owner create a separate account
+- Passwords must NEVER be sent via email or Slack — use Bitwarden exclusively for any shared credentials
+- Hardcoded credentials in source code, config files, or scripts are **STRICTLY PROHIBITED**
+- Use SSO instead of individual passwords wherever possible
+- Suspected compromised password: rotate immediately and notify the Security team
+
+## MFA requirements
+- MFA required on ALL systems that support it — no exceptions
+- Required for: admin access to production, email, GitHub, Azure, and all remote access
+- Preferred methods: hardware security keys or authenticator apps (TOTP)
+- SMS-based MFA should be avoided (SIM-swapping risk)
+
+## Access provisioning
+
+| Action | Requirement |
+| --- | --- |
+| Standard access | Least-privilege basis — only what's needed for the role |
+| Admin / elevated access | VP or C-level approval required |
+| Access reviews | At least annually |
+| Inactive accounts | Automatically disabled after 30 days |
+| Upon termination | All access revoked and assets returned immediately |
+
+## Devices
+- Lost or stolen devices must be reported immediately to the Security team
+- Full-disk encryption required on all workstations and mobile devices
+- Lock workstation whenever stepping away; log off at end of day
+- Only management-approved software may be installed`,
+  },
+  {
+    category: "deployment",
+    name: "Deployment & Change",
+    doc: "Information Security Policy v2",
+    severity: "medium",
+    url: docxViewer(`${BASE_STORAGE}/InformationSecurityPolicy_v2.docx`),
+    default: `Filed Deployment & Change Policy
+
+## Deployment rules
+- All production deployments must have a corresponding PR reviewed by at least one other engineer
+- No direct pushes to main/production branch — all changes go through the PR process
+- Hotfixes to production during incidents are allowed but must be followed by a post-mortem
+- Infrastructure changes (cloud config, IAM, networking) require a second reviewer
+
+## What must be logged for every deployment
+- All system configuration changes, software patches, and installed software changes
+- All access control changes (provisioning, privilege changes, firewall rule modifications)
+- Log entries must include: action type, actor identity, target, timestamp (UTC), before/after values
+
+## Prohibited
+- Disabling or bypassing security controls during deployments
+- Hardcoded credentials in source code or config files — strictly prohibited
+- Tampering with or disabling logs is a serious violation subject to termination
+
+## Backup and recovery
+- Production databases: daily snapshots, 30-day rolling retention + long-term archive
+- Backup failures trigger an alert to the CTO and are treated as incidents
+- All data processed and stored on US-based servers only — no offshore transfers`,
+  },
+  {
+    category: "vendor",
+    name: "Vendor & Third-Party",
+    doc: "Spend Policy v2 / Information Security Policy v2",
+    severity: "medium",
+    url: docxViewer(`${BASE_STORAGE}/AcceptableUsePolicy_v2.docx`),
+    default: `Filed Vendor & Third-Party Policy
+
+## Before onboarding any new vendor or tool
+1. Does it process personal or customer data? If yes, a signed DPA is required before access
+2. Where is data stored? Must be US-based servers — no offshore data transfers permitted
+3. Do they have SOC 2 Type II or equivalent certification?
+4. Will they need access to Filed systems? If yes, requires security review and approval
+5. NDA must be signed before sharing any confidential information
+
+## Ongoing vendor management
+- Disclosures of Confidential/Restricted data to third parties must be documented and tracked
+- Client data must never be used by vendors to train AI models
+- Any vendor accessing taxpayer data must comply with IRS Section 7216
+
+## Approval requirements
+
+| Contract value | Approver |
+| --- | --- |
+| < $10,000/year | Department head |
+| $10,000–$50,000/year | VP or C-level |
+| > $50,000/year | CEO (Kamyar) |`,
+  },
+];
+
+let currentFilter = "all";
+let overrides = {};
+let metadata = {};
+let auditLog = {};
+
+function sbFetch(path) {
+  return fetch(`${SUPABASE_URL}/rest/v1/${path}`, {
+    headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` },
+  });
+}
+
+async function fetchOverrides() {
+  try {
+    const [resOverrides, resMeta, resAudit] = await Promise.all([
+      sbFetch("policy_overrides?select=category,text"),
+      sbFetch("policy_metadata?select=*"),
+      sbFetch("policy_audit_log?select=*&order=changed_at.asc"),
+    ]);
+
+    if (!resOverrides.ok) throw new Error(resOverrides.statusText);
+
+    const [dataOverrides, dataMeta, dataAudit] = await Promise.all([
+      resOverrides.json(),
+      resMeta.ok ? resMeta.json() : [],
+      resAudit.ok ? resAudit.json() : [],
+    ]);
+
+    overrides = {};
+    for (const row of dataOverrides) overrides[row.category] = row.text;
+
+    metadata = {};
+    for (const row of dataMeta) metadata[row.category] = row;
+
+    auditLog = {};
+    for (const row of dataAudit) {
+      if (!auditLog[row.category]) auditLog[row.category] = [];
+      auditLog[row.category].push(row);
+    }
+
+    document.getElementById("status").textContent = "Live";
+    document.getElementById("status").className = "live";
+    const now = new Date();
+    document.getElementById("last-updated").textContent =
+      `Updated ${now.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`;
+  } catch (e) {
+    console.error("[policies] fetch failed:", e);
+    document.getElementById("status").textContent = "Offline — showing defaults";
+    document.getElementById("status").className = "error";
+  }
+}
+
+function escapeHtml(str) {
+  return str
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
+}
+
+function inlineFormat(str) {
+  return escapeHtml(str)
+    .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
+    .replace(/`(.+?)`/g, "<code>$1</code>");
+}
+
+function textToHtml(raw) {
+  const lines = raw.split("\n");
+  const out = [];
+  let i = 0;
+
+  function closeList(tag) {
+    out.push(`</${tag}>`);
+  }
+
+  while (i < lines.length) {
+    const line = lines[i];
+    const trimmed = line.trim();
+
+    // Blank line — skip
+    if (!trimmed) { i++; continue; }
+
+    // Subsection header: ### ...
+    if (trimmed.startsWith("### ")) {
+      out.push(`<h4 class="policy-subsection">${escapeHtml(trimmed.slice(4))}</h4>`);
+      i++;
+      continue;
+    }
+
+    // Section header: ## ...
+    if (trimmed.startsWith("## ")) {
+      out.push(`<h3 class="policy-section">${escapeHtml(trimmed.slice(3))}</h3>`);
+      i++;
+      continue;
+    }
+
+    // Table block: starts with |
+    if (trimmed.startsWith("|")) {
+      const tableLines = [];
+      while (i < lines.length && lines[i].trim().startsWith("|")) {
+        tableLines.push(lines[i].trim());
+        i++;
+      }
+      // Filter out separator rows (e.g. | --- | --- |)
+      const dataRows = tableLines.filter(l => !/^\|[\s\-|:]+\|$/.test(l));
+      if (dataRows.length > 0) {
+        const parseCells = row =>
+          row.split("|").slice(1, -1).map(c => c.trim());
+        const headers = parseCells(dataRows[0]);
+        const body = dataRows.slice(1);
+        let t = '<table class="policy-table"><thead><tr>';
+        headers.forEach(h => t += `<th>${inlineFormat(h)}</th>`);
+        t += "</tr></thead><tbody>";
+        body.forEach(row => {
+          t += "<tr>";
+          parseCells(row).forEach(c => t += `<td>${inlineFormat(c)}</td>`);
+          t += "</tr>";
+        });
+        t += "</tbody></table>";
+        out.push(t);
+      }
+      continue;
+    }
+
+    // Unordered list block
+    if (trimmed.startsWith("- ")) {
+      out.push('<ul class="policy-list">');
+      while (i < lines.length) {
+        const t = lines[i].trim();
+        if (!t.startsWith("- ")) break;
+        const itemText = inlineFormat(t.slice(2));
+        // Collect indented sub-items on following lines
+        const subs = [];
+        i++;
+        while (i < lines.length) {
+          const sub = lines[i].trim();
+          const isIndented = lines[i].startsWith("  ") || lines[i].startsWith("\t");
+          if (isIndented && sub.startsWith("- ")) {
+            subs.push(inlineFormat(sub.slice(2)));
+            i++;
+          } else {
+            break;
+          }
+        }
+        if (subs.length > 0) {
+          out.push(`<li>${itemText}<ul>${subs.map(s => `<li>${s}</li>`).join("")}</ul></li>`);
+        } else {
+          out.push(`<li>${itemText}</li>`);
+        }
+      }
+      out.push("</ul>");
+      continue;
+    }
+
+    // Ordered list block
+    if (/^\d+\./.test(trimmed)) {
+      out.push('<ol class="policy-list">');
+      while (i < lines.length && /^\d+\./.test(lines[i].trim())) {
+        const item = lines[i].trim().replace(/^\d+\.\s*/, "");
+        out.push(`<li>${inlineFormat(item)}</li>`);
+        i++;
+      }
+      out.push("</ol>");
+      continue;
+    }
+
+    // First non-header line (policy title/intro)
+    if (out.length === 0) {
+      out.push(`<p class="policy-intro">${inlineFormat(trimmed)}</p>`);
+    } else {
+      out.push(`<p class="policy-para">${inlineFormat(trimmed)}</p>`);
+    }
+    i++;
+  }
+
+  return out.join("");
+}
+
+function renderCards() {
+  const container = document.getElementById("cards");
+  container.innerHTML = "";
+
+  const filtered = POLICIES.filter(p =>
+    currentFilter === "all" || p.severity === currentFilter
+  );
+
+  document.getElementById("empty").style.display = filtered.length === 0 ? "block" : "none";
+
+  filtered.forEach(p => {
+    const text = overrides[p.category] || p.default;
+    const isOverride = !!overrides[p.category];
+
+    const card = document.createElement("div");
+    card.className = "policy-card";
+    card.dataset.severity = p.severity;
+
+    const meta = metadata[p.category];
+    const logs = auditLog[p.category] || [];
+
+    const metaHtml = meta ? `
+      <div class="policy-meta">
+        <div class="meta-row">
+          <span class="meta-label">Version</span>
+          <span class="meta-value">${escapeHtml(meta.version || "—")}</span>
+        </div>
+        <div class="meta-row">
+          <span class="meta-label">Document Owner</span>
+          <span class="meta-value">${escapeHtml(meta.document_owner || "—")}</span>
+        </div>
+        <div class="meta-row">
+          <span class="meta-label">Approved By</span>
+          <span class="meta-value">${escapeHtml(meta.approved_by || "—")}</span>
+        </div>
+        <div class="meta-row">
+          <span class="meta-label">Effective Date</span>
+          <span class="meta-value">${meta.effective_date ? new Date(meta.effective_date).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" }) : "—"}</span>
+        </div>
+        <div class="meta-row">
+          <span class="meta-label">Renewal Date</span>
+          <span class="meta-value">${meta.renewal_date ? new Date(meta.renewal_date).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" }) : "—"}</span>
+        </div>
+        <div class="meta-row">
+          <span class="meta-label">Compliance Impact</span>
+          <span class="meta-value">${escapeHtml(meta.compliance_impact || "—")}</span>
+        </div>
+        <div class="meta-row">
+          <span class="meta-label">Classification</span>
+          <span class="meta-value">${escapeHtml(meta.classification || "—")}</span>
+        </div>
+      </div>` : "";
+
+    const auditHtml = logs.length > 0 ? `
+      <div class="audit-section">
+        <div class="audit-title">Revision History</div>
+        <table class="policy-table">
+          <thead><tr>
+            <th>Version</th><th>Date</th><th>Editor</th><th>Approver</th><th>Description</th>
+          </tr></thead>
+          <tbody>
+            ${logs.map(l => `<tr>
+              <td>${escapeHtml(l.version || "—")}</td>
+              <td>${l.changed_at ? new Date(l.changed_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "—"}</td>
+              <td>${escapeHtml(l.changed_by || "—")}</td>
+              <td>${escapeHtml(l.approved_by || "—")}</td>
+              <td>${escapeHtml(l.description || "—")}</td>
+            </tr>`).join("")}
+          </tbody>
+        </table>
+      </div>` : "";
+
+    card.innerHTML = `
+      <div class="card-header">
+        <div class="severity-dot ${p.severity}"></div>
+        <div class="card-title">
+          <h2>${escapeHtml(p.name)}</h2>
+          <p>${escapeHtml(p.doc)}${meta ? ` · v${escapeHtml(meta.version)}` : ""}</p>
+        </div>
+        <div class="card-badges">
+          <span class="badge severity-${p.severity}">${p.severity}</span>
+          ${isOverride ? '<span class="badge override">Override active</span>' : ""}
+        </div>
+        <svg class="chevron" viewBox="0 0 20 20" fill="currentColor">
+          <path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.17l3.71-3.94a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clip-rule="evenodd"/>
+        </svg>
+      </div>
+      <div class="card-body">
+        ${metaHtml}
+        ${isOverride ? '<div class="override-notice">✦ This policy has been customised via /norm edit</div>' : ""}
+        <div class="policy-content">${textToHtml(text)}</div>
+        ${auditHtml}
+      </div>
+    `;
+
+    card.querySelector(".card-header").addEventListener("click", () => {
+      card.classList.toggle("open");
+    });
+
+    container.appendChild(card);
+  });
+}
+
+document.querySelectorAll(".filter-btn").forEach(btn => {
+  btn.addEventListener("click", () => {
+    document.querySelectorAll(".filter-btn").forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+    currentFilter = btn.dataset.filter;
+    renderCards();
+  });
+});
+
+(async () => {
+  renderCards(); // show defaults immediately
+  await fetchOverrides();
+  renderCards(); // re-render with any live overrides
+})();
+</script>
+</body>
+</html>
