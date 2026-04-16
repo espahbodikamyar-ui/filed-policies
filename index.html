@@ -203,11 +203,31 @@
       border-bottom: 1px solid #f0f0f0;
     }
 
+    .policy-content h2.policy-title {
+      font-size: 16px;
+      font-weight: 700;
+      color: #1d1d1f;
+      margin: 28px 0 12px;
+    }
+
     .policy-content h4.policy-subsection {
       font-size: 13px;
       font-weight: 600;
       color: #1d1d1f;
       margin: 16px 0 6px;
+    }
+
+    .policy-content h5.policy-subsubsection {
+      font-size: 12px;
+      font-weight: 600;
+      color: #555;
+      margin: 12px 0 4px;
+    }
+
+    .policy-content hr.policy-divider {
+      border: none;
+      border-top: 2px solid #e5e5e5;
+      margin: 32px 0;
     }
 
     .policy-content ul.policy-list,
@@ -808,6 +828,7 @@ function escapeHtml(str) {
 function inlineFormat(str) {
   return escapeHtml(str)
     .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
+    .replace(/_(.+?)_/g, "<em>$1</em>")
     .replace(/`(.+?)`/g, "<code>$1</code>");
 }
 
@@ -827,9 +848,16 @@ function textToHtml(raw) {
     // Blank line — skip
     if (!trimmed) { i++; continue; }
 
-    // Subsection header: ### ...
-    if (trimmed.startsWith("### ")) {
-      out.push(`<h4 class="policy-subsection">${escapeHtml(trimmed.slice(4))}</h4>`);
+    // Document separator: ---
+    if (trimmed === "---") {
+      out.push('<hr class="policy-divider">');
+      i++;
+      continue;
+    }
+
+    // Top-level header: # ...
+    if (trimmed.startsWith("# ")) {
+      out.push(`<h2 class="policy-title">${escapeHtml(trimmed.slice(2))}</h2>`);
       i++;
       continue;
     }
@@ -837,6 +865,20 @@ function textToHtml(raw) {
     // Section header: ## ...
     if (trimmed.startsWith("## ")) {
       out.push(`<h3 class="policy-section">${escapeHtml(trimmed.slice(3))}</h3>`);
+      i++;
+      continue;
+    }
+
+    // Subsection header: ### ...
+    if (trimmed.startsWith("### ")) {
+      out.push(`<h4 class="policy-subsection">${escapeHtml(trimmed.slice(4))}</h4>`);
+      i++;
+      continue;
+    }
+
+    // Deep subsection: #### ...
+    if (trimmed.startsWith("#### ")) {
+      out.push(`<h5 class="policy-subsubsection">${escapeHtml(trimmed.slice(5))}</h5>`);
       i++;
       continue;
     }
