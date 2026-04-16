@@ -1062,7 +1062,7 @@ function renderCards() {
         <div class="severity-dot ${p.severity}"></div>
         <div class="card-title">
           <h2>${escapeHtml(p.name)}</h2>
-          <p>${escapeHtml(p.doc)}${meta?.version ? ` · v${escapeHtml(meta.version.replace(/^v/i, ""))}` : ""}</p>
+          <p>${escapeHtml(p.doc)}</p>
         </div>
         <div class="card-badges">
           <span class="badge severity-${p.severity}">${p.severity}</span>
