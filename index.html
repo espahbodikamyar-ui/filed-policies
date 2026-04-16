@@ -769,6 +769,7 @@ At Filed, we trust you to make decisions that move us forward. Spend what you ne
 
 let currentFilter = "all";
 let overrides = {};
+let manualEdits = {};
 let metadata = {};
 let auditLog = {};
 
@@ -781,7 +782,7 @@ function sbFetch(path) {
 async function fetchOverrides() {
   try {
     const [resOverrides, resMeta, resAudit] = await Promise.all([
-      sbFetch("policy_overrides?select=category,text"),
+      sbFetch("policy_overrides?select=category,text,updated_by"),
       sbFetch("policy_metadata?select=*"),
       sbFetch("policy_audit_log?select=*&order=changed_at.asc"),
     ]);
@@ -795,7 +796,11 @@ async function fetchOverrides() {
     ]);
 
     overrides = {};
-    for (const row of dataOverrides) overrides[row.category] = row.text;
+    manualEdits = {};
+    for (const row of dataOverrides) {
+      overrides[row.category] = row.text;
+      if (row.updated_by && row.updated_by !== "system") manualEdits[row.category] = true;
+    }
 
     metadata = {};
     for (const row of dataMeta) metadata[row.category] = row;
@@ -977,7 +982,7 @@ function renderCards() {
 
   filtered.forEach(p => {
     const text = overrides[p.category] || p.default;
-    const isOverride = !!overrides[p.category];
+    const isOverride = !!manualEdits[p.category];
 
     const card = document.createElement("div");
     card.className = "policy-card";
