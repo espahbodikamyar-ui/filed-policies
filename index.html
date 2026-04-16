@@ -1036,10 +1036,10 @@ document.querySelectorAll(".filter-btn").forEach(btn => {
   });
 });
 
-function openCardFromHash() {
-  const hash = window.location.hash.slice(1); // e.g. "policy-data_flow"
-  if (!hash) return;
-  const target = document.getElementById(hash);
+function openCardFromParam() {
+  const policy = new URLSearchParams(window.location.search).get("policy");
+  if (!policy) return;
+  const target = document.getElementById(`policy-${policy}`);
   if (!target) return;
   target.classList.add("open");
   setTimeout(() => target.scrollIntoView({ behavior: "smooth", block: "start" }), 50);
@@ -1049,10 +1049,8 @@ function openCardFromHash() {
   renderCards(); // show defaults immediately
   await fetchOverrides();
   renderCards(); // re-render with any live overrides
-  openCardFromHash();
+  openCardFromParam();
 })();
-
-window.addEventListener("hashchange", openCardFromHash);
 </script>
 </body>
 </html>
