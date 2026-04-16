@@ -655,7 +655,7 @@ At Filed, we trust you to make decisions that move us forward. Spend what you ne
   {
     category: "ai_usage",
     name: "AI Usage",
-    doc: "Acceptable Use Policy v2 / Code of Conduct v2",
+    doc: "Acceptable Use Policy v2",
     severity: "medium",
     url: docxViewer(`${BASE_STORAGE}/AcceptableUsePolicy_v2.docx`),
     default: `Filed AI Usage Policy
@@ -674,7 +674,7 @@ At Filed, we trust you to make decisions that move us forward. Spend what you ne
   {
     category: "access_control",
     name: "Access Control",
-    doc: "Acceptable Use Policy v2 / Password Policy v2",
+    doc: "Password Policy v2",
     severity: "high",
     url: docxViewer(`${BASE_STORAGE}/AcceptableUsePolicy_v2.docx`),
     default: `Filed Access Control Policy
@@ -1062,7 +1062,7 @@ function renderCards() {
         <div class="severity-dot ${p.severity}"></div>
         <div class="card-title">
           <h2>${escapeHtml(p.name)}</h2>
-          <p>${escapeHtml(p.doc)}${meta ? ` · v${escapeHtml(meta.version)}` : ""}</p>
+          <p>${escapeHtml(p.doc)}${meta?.version ? ` · v${escapeHtml(meta.version.replace(/^v/i, ""))}` : ""}</p>
         </div>
         <div class="card-badges">
           <span class="badge severity-${p.severity}">${p.severity}</span>
